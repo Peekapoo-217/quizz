@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>England Quiz Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Fredoka', sans-serif;
+      background: linear-gradient(135deg, #ffdee9, #b5fffc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 30px;
+      padding: 35px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .question-number {
+      font-size: 1.5rem;
+      color: #ff4f81;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #6a4cff;
+      font-size: 3rem;
+    }
+
+    .question {
+      font-size: 2rem;
+      color: #333;
+      margin: 30px 0;
+      line-height: 1.5;
+    }
+
+    .answers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .answer-btn {
+      border: none;
+      border-radius: 20px;
+      padding: 22px;
+      font-size: 1.3rem;
+      font-family: 'Fredoka', sans-serif;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: linear-gradient(135deg, #ffd86f, #fc6262);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .answer-btn:hover {
+      transform: translateY(-4px) scale(1.03);
+    }
+
+    .correct {
+      background: linear-gradient(135deg, #43e97b, #38f9d7) !important;
+      animation: pop 0.4s ease;
+    }
+
+    .wrong {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b) !important;
+      animation: shake 0.4s ease;
+    }
+
+    .next-btn {
+      margin-top: 30px;
+      padding: 15px 35px;
+      border: none;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 1.2rem;
+      font-family: 'Fredoka', sans-serif;
+      cursor: pointer;
+      display: none;
+    }
+
+    .score {
+      font-size: 2.3rem;
+      color: #6a4cff;
+      margin-top: 30px;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.8); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-6px); }
+    }
+
+    @media (max-width: 700px) {
+      .answers {
+        grid-template-columns: 1fr;
+      }
+
+      .question {
+        font-size: 1.5rem;
+      }
+
+      .answer-btn {
+        font-size: 1.1rem;
+      }
+
+      h1 {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="question-number" id="question-number"></div>
+    <h1>🇬🇧 England Quiz Game</h1>
+
+    <div class="question" id="question"></div>
+
+    <div class="answers" id="answers"></div>
+
+    <button class="next-btn" id="next-btn">Next Question ➜</button>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <audio id="correct-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
+  <audio id="wrong-sound" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3"></audio>
+
+  <script>
+    const quizData = [
+      {
+        question: 'Which famous landmark is located in London?',
+        answers: ['Buckingham Palace', 'Stonehenge', 'York Minster', 'Arundel Castle'],
+        correct: 0
+      },
+      {
+        question: 'Which attraction is NOT in London?',
+        answers: ['The British Museum', 'Buckingham Palace', 'The London Eye', 'Stonehenge'],
+        correct: 3
+      },
+      {
+        question: 'Which food is mentioned as typical English cuisine?',
+        answers: ['Sushi', 'Yorkshire puddings', 'Tacos', 'Hamburgers'],
+        correct: 1
+      },
+      {
+        question: 'England is famous for which drinks?',
+        answers: ['Tea and ale', 'Coffee and cola', 'Lemonade and tea', 'Milk and juice'],
+        correct: 0
+      },
+      {
+        question: 'What is the capital city of England?',
+        answers: ['Birmingham', 'London', 'Manchester', 'Liverpool'],
+        correct: 1
+      },
+      {
+        question: 'About how many people live in London?',
+        answers: ['About 3 million', 'About 15 million', 'About 5 million', 'Over 9 million'],
+        correct: 3
+      },
+      {
+        question: 'Which sport is the most popular in England?',
+        answers: ['Football', 'Rugby', 'Cricket', 'Tennis'],
+        correct: 0
+      },
+      {
+        question: 'What is the name of England’s biggest football league?',
+        answers: ['Serie A', 'Bundesliga', 'Champions League', 'Premier League'],
+        correct: 3
+      },
+      {
+        question: 'England gets its name from which tribe?',
+        answers: ['The Celts', 'The Romans', 'The Angles', 'The Vikings'],
+        correct: 2
+      },
+      {
+        question: 'The term “Anglo-Saxon” refers to the Angles and the ________.',
+        answers: ['Saxons', 'Romans', 'Danes', 'Normans'],
+        correct: 0
+      },
+      {
+        question: 'What was the population of England in 2019?',
+        answers: ['Just over 55 million', 'About 30 million', 'About 40 million', 'About 80 million'],
+        correct: 0
+      },
+      {
+        question: 'What is the population of the UK as a whole?',
+        answers: ['90 million', '50 million', '70 million', '66 million'],
+        correct: 3
+      },
+      {
+        question: 'Which country may the UK overtake in population within the next 50 years?',
+        answers: ['France', 'Spain', 'Italy', 'Germany'],
+        correct: 3
+      },
+      {
+        question: 'Which famous writer mentioned in the transcript is from England?',
+        answers: ['Mark Twain', 'Ernest Hemingway', 'William Shakespeare', 'Victor Hugo'],
+        correct: 2
+      },
+      {
+        question: 'Which famous athlete mentioned in the transcript is English?',
+        answers: ['Lionel Messi', 'Cristiano Ronaldo', 'Michael Jordan', 'David Beckham'],
+        correct: 3
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById('question');
+    const answersEl = document.getElementById('answers');
+    const nextBtn = document.getElementById('next-btn');
+    const scoreEl = document.getElementById('score');
+    const questionNumberEl = document.getElementById('question-number');
+
+    const correctSound = document.getElementById('correct-sound');
+    const wrongSound = document.getElementById('wrong-sound');
+
+    function loadQuestion() {
+      const current = quizData[currentQuestion];
+
+      questionNumberEl.textContent = `Question ${currentQuestion + 1} / ${quizData.length}`;
+      questionEl.textContent = current.question;
+      answersEl.innerHTML = '';
+      nextBtn.style.display = 'none';
+
+      current.answers.forEach((answer, index) => {
+        const button = document.createElement('button');
+        button.classList.add('answer-btn');
+        button.innerHTML = `<strong>${String.fromCharCode(65 + index)}.</strong> ${answer}`;
+
+        button.addEventListener('click', () => selectAnswer(button, index));
+
+        answersEl.appendChild(button);
+      });
+    }
+
+    function selectAnswer(button, index) {
+      const current = quizData[currentQuestion];
+      const buttons = document.querySelectorAll('.answer-btn');
+
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (index === current.correct) {
+        button.classList.add('correct');
+        score++;
+        correctSound.play();
+
+        confetti({
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.6 }
+        });
+      } else {
+        button.classList.add('wrong');
+        wrongSound.play();
+
+        buttons[current.correct].classList.add('correct');
+      }
+
+      nextBtn.style.display = 'inline-block';
+    }
+
+    nextBtn.addEventListener('click', () => {
+      currentQuestion++;
+
+      if (currentQuestion < quizData.length) {
+        loadQuestion();
+      } else {
+        showScore();
+      }
+    });
+
+    function showScore() {
+      questionNumberEl.textContent = '🎉 Quiz Completed!';
+      questionEl.innerHTML = 'Great job finishing the quiz! 🇬🇧';
+      answersEl.innerHTML = '';
+      nextBtn.style.display = 'none';
+      scoreEl.textContent = '';
+
+      confetti({
+        particleCount: 250,
+        spread: 150,
+        origin: { y: 0.6 }
+      });
+
+      correctSound.play();
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
